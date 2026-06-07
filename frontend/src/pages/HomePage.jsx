@@ -1,9 +1,9 @@
-// HomePage.jsx
-// Page d'accueil après connexion - permet de démarrer ou importer une évaluation
-
 import Navbar from "../components/layout/Navbar";
+import { useNavigate } from "react-router-dom";
 
 function HomePage() {
+  const navigate = useNavigate();
+
   return (
     <div>
       <Navbar />
@@ -11,7 +11,12 @@ function HomePage() {
         <img src="/zebra-logo.png" alt="Logo zèbre hEDS" style={styles.logo} />
         <h1 style={styles.title}>Syndrome d'Ehlers-Danlos hypermobile</h1>
         <div style={styles.buttonGroup}>
-          <button style={styles.btnPrimary}>Nouvelle évaluation</button>
+          <button
+            style={styles.btnPrimary}
+            onClick={() => navigate("/evaluation")}
+          >
+            Nouvelle évaluation
+          </button>
           <button style={styles.btnSecondary}>Importer une évaluation</button>
         </div>
       </div>
