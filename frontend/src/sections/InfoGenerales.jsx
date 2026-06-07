@@ -1,62 +1,67 @@
-function InfoGenerales({ formData, updateField, onNext, onSkip }) {
+import { useState } from "react";
+
+function InfoGenerales({ formData, updateField, onNext }) {
+  const [errors, setErrors] = useState({});
+
+  const validate = () => {
+    const newErrors = {};
+    if (!formData.genre) {
+      newErrors.genre = "Veuillez sélectionner le genre du patient.";
+    }
+    if (!formData.dateConsultation) {
+      newErrors.dateConsultation =
+        "Veuillez indiquer la date de la consultation.";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleNext = () => {
+    if (validate()) onNext();
+  };
+
   return (
     <div>
-      <button style={styles.btnSkip} onClick={onSkip}>
-        ▷ Composante non évaluée lors de cette consultation
-      </button>
-
       <h2 style={styles.title}>Informations générales</h2>
 
       <div style={styles.fieldGroup}>
-        <p style={styles.label}>Genre du patient</p>
+        <p style={styles.label}>
+          Genre du patient <span style={styles.required}>*</span>
+        </p>
         <div style={styles.optionsRow}>
-          <label style={styles.option}>
-            <input
-              type="radio"
-              name="genre"
-              value="masculin"
-              checked={formData.genre === "masculin"}
-              onChange={() => updateField("genre", "masculin")}
-              style={styles.radio}
-            />
-            <span>Masculin</span>
-          </label>
-          <label style={styles.option}>
-            <input
-              type="radio"
-              name="genre"
-              value="feminin"
-              checked={formData.genre === "feminin"}
-              onChange={() => updateField("genre", "feminin")}
-              style={styles.radio}
-            />
-            <span>Féminin</span>
-          </label>
-          <label style={styles.option}>
-            <input
-              type="radio"
-              name="genre"
-              value="neutre"
-              checked={formData.genre === "neutre"}
-              onChange={() => updateField("genre", "neutre")}
-              style={styles.radio}
-            />
-            <span>Neutre</span>
-          </label>
+          {["masculin", "feminin", "neutre"].map((g) => (
+            <label key={g} style={styles.option}>
+              <input
+                type="radio"
+                name="genre"
+                value={g}
+                checked={formData.genre === g}
+                onChange={() => updateField("genre", g)}
+                style={styles.radio}
+              />
+              <span>{g.charAt(0).toUpperCase() + g.slice(1)}</span>
+            </label>
+          ))}
         </div>
+        {errors.genre && <p style={styles.errorMsg}>{errors.genre}</p>}
       </div>
 
       <div style={styles.fieldGroup}>
-        <p style={styles.label}>Date de la consultation</p>
+        <p style={styles.label}>
+          Date de la consultation <span style={styles.required}>*</span>
+        </p>
         <input
           type="date"
           value={formData.dateConsultation}
           onChange={(e) => updateField("dateConsultation", e.target.value)}
           style={styles.dateInput}
         />
+        {errors.dateConsultation && (
+          <p style={styles.errorMsg}>{errors.dateConsultation}</p>
+        )}
       </div>
 
-      <button style={styles.btnPrimary} onClick={onNext}>
+      <button style={styles.btnPrimary} onClick={handleNext}>
         Section suivante
       </button>
     </div>
@@ -64,18 +69,6 @@ function InfoGenerales({ formData, updateField, onNext, onSkip }) {
 }
 
 const styles = {
-  btnSkip: {
-    width: "100%",
-    padding: "10px",
-    backgroundColor: "#f0f0f0",
-    color: "#888",
-    border: "1px solid #ddd",
-    borderRadius: "8px",
-    fontSize: "14px",
-    cursor: "pointer",
-    marginBottom: "24px",
-    textAlign: "center",
-  },
   title: {
     fontSize: "20px",
     fontWeight: "700",
@@ -90,6 +83,10 @@ const styles = {
     fontSize: "14px",
     color: "#1a1a2e",
     marginBottom: "10px",
+  },
+  required: {
+    color: "red",
+    marginLeft: "4px",
   },
   optionsRow: {
     display: "flex",
@@ -113,6 +110,11 @@ const styles = {
     borderRadius: "8px",
     fontSize: "14px",
     color: "#1a1a2e",
+  },
+  errorMsg: {
+    color: "red",
+    fontSize: "12px",
+    marginTop: "6px",
   },
   btnPrimary: {
     width: "100%",

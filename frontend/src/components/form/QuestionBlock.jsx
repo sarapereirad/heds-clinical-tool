@@ -8,7 +8,7 @@ function QuestionBlock({
   const labels = {
     oui: "Oui",
     non: "Non",
-    non_evalue: "Non évalué",
+    non_evalue: "Non évaluée",
   };
 
   return (

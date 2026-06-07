@@ -13,10 +13,6 @@ function ReseauMedical({ formData, updateField, onSkip }) {
 
   return (
     <div>
-      <button style={styles.btnSkip} onClick={onSkip}>
-        ▷ Composante non évaluée lors de cette consultation
-      </button>
-
       <h2 style={styles.title}>4. Réseau médical</h2>
       <p style={styles.instruction}>
         Cochez les spécialistes impliqués dans le suivi
