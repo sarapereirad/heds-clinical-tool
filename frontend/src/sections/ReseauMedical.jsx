@@ -1,6 +1,6 @@
 import { SPECIALISTS } from "../data/formStructure";
 
-function ReseauMedical({ formData, updateField, onSkip }) {
+function ReseauMedical({ formData, updateField }) {
   const updateSpecialist = (name, field, value) => {
     updateField("specialistes", {
       ...formData.specialistes,

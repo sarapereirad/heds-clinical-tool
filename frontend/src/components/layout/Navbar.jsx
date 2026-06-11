@@ -1,17 +1,37 @@
 import { AiOutlineHome, AiOutlineLogout, AiOutlineLock } from "react-icons/ai";
+import { useNavigate } from "react-router-dom";
+import keycloak from "../../services/authService";
 
 function Navbar() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    keycloak.logout({
+      redirectUri: "http://localhost:5173/login",
+    });
+  };
+
+  const handleChangePassword = () => {
+    keycloak.accountManagement();
+  };
+
+  const handleHome = () => {
+    navigate("/");
+  };
+
   return (
     <nav style={styles.navbar}>
       <div style={styles.left}>
-        <AiOutlineHome size={22} style={styles.homeIcon} />
+        <AiOutlineHome size={22} style={styles.homeIcon} onClick={handleHome} />
       </div>
       <div style={styles.right}>
-        <span style={styles.doctorName}>Dr. Fernandez</span>
-        <button style={styles.btnOutline}>
+        <span style={styles.doctorName}>
+          {keycloak.tokenParsed?.given_name} {keycloak.tokenParsed?.family_name}
+        </span>
+        <button style={styles.btnOutline} onClick={handleChangePassword}>
           <AiOutlineLock size={14} /> Changer le mot de passe
         </button>
-        <button style={styles.btnOutline}>
+        <button style={styles.btnOutline} onClick={handleLogout}>
           <AiOutlineLogout size={14} /> Déconnexion
         </button>
       </div>
@@ -29,7 +49,11 @@ const styles = {
     borderBottom: "1px solid #e0e0e0",
   },
   left: {
-    fontSize: "20px",
+    cursor: "pointer",
+    color: "#1a1a2e",
+  },
+  homeIcon: {
+    color: "#1a1a2e",
     cursor: "pointer",
   },
   right: {

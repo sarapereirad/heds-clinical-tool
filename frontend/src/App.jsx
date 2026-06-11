@@ -1,13 +1,26 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
 import EvaluationPage from "./pages/EvaluationPage";
 
-function App() {
+function App({ authenticated }) {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/evaluation" element={<EvaluationPage />} />
+        <Route
+          path="/login"
+          element={authenticated ? <Navigate to="/" /> : <LoginPage />}
+        />
+        <Route
+          path="/"
+          element={authenticated ? <HomePage /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/evaluation"
+          element={
+            authenticated ? <EvaluationPage /> : <Navigate to="/login" />
+          }
+        />
       </Routes>
     </BrowserRouter>
   );
