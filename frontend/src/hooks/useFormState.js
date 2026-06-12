@@ -11,7 +11,7 @@ function getTodayDate() {
   return new Date().toISOString().split("T")[0];
 }
 
-export function useFormState() {
+export function useFormState(importedData = null) {
   const [patientId] = useState(generatePatientId);
 
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
@@ -20,32 +20,34 @@ export function useFormState() {
     Object.fromEntries(SECTIONS.map((s) => [s.id, "pending"])),
   );
 
-  const [formData, setFormData] = useState({
-    genre: "",
-    dateConsultation: getTodayDate(),
+  const [formData, setFormData] = useState(
+    importedData?.formData || {
+      genre: "",
+      dateConsultation: getTodayDate(),
 
-    piedsPats: "",
-    douleursInflammatoires: "",
-    typeInflammation: "",
-    instabiliteArticulaire: "",
-    fracturesMultiples: "",
-    osteoporoseConnue: "",
-    traitementOsteoporose: "",
-    patientOuvertTraitement: "",
-    syndromeDefileThoracique: "",
-    notesOsteo: "",
+      piedsPats: "",
+      douleursInflammatoires: "",
+      typeInflammation: "",
+      instabiliteArticulaire: "",
+      fracturesMultiples: "",
+      osteoporoseConnue: "",
+      traitementOsteoporose: "",
+      patientOuvertTraitement: "",
+      syndromeDefileThoracique: "",
+      notesOsteo: "",
 
-    douleursNociplastiques: "",
-    descriptionDouleursNociplastiques: "",
-    doueursMuscularires: "",
-    notesGeneralisees: "",
+      douleursNociplastiques: "",
+      descriptionDouleursNociplastiques: "",
+      doueursMuscularires: "",
+      notesGeneralisees: "",
 
-    douleursNeuropathiques: "",
-    notesNeuropathiques: "",
+      douleursNeuropathiques: "",
+      notesNeuropathiques: "",
 
-    specialistes: {},
-    notesReseau: "",
-  });
+      specialistes: {},
+      notesReseau: "",
+    },
+  );
 
   const updateField = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));

@@ -17,7 +17,12 @@ function HomePage() {
           >
             Nouvelle évaluation
           </button>
-          <button style={styles.btnSecondary}>Importer une évaluation</button>
+          <button
+            style={styles.btnSecondary}
+            onClick={() => navigate("/import")}
+          >
+            Importer une évaluation
+          </button>
         </div>
       </div>
     </div>

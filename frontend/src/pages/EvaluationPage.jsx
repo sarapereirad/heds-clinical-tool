@@ -10,7 +10,7 @@ import DouleursGeneralisees from "../sections/DouleursGeneralisees";
 import DouleursNeuropathiques from "../sections/DouleursNeuropathiques";
 import ReseauMedical from "../sections/ReseauMedical";
 
-function EvaluationPage() {
+function EvaluationPage({ importedData }) {
   const navigate = useNavigate();
   const {
     patientId,
@@ -21,7 +21,7 @@ function EvaluationPage() {
     goToNextSection,
     skipSection,
     goToSection,
-  } = useFormState();
+  } = useFormState(importedData);
 
   const renderSection = () => {
     const props = {
