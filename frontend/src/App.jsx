@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useState } from "react";
-import keycloak from "./services/authService";
 import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
 import EvaluationPage from "./pages/EvaluationPage";
