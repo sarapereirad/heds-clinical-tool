@@ -40,7 +40,13 @@ function EvaluationPage() {
       case 3:
         return <DouleursNeuropathiques {...props} />;
       case 4:
-        return <ReseauMedical formData={formData} updateField={updateField} />;
+        return (
+          <ReseauMedical
+            formData={formData}
+            updateField={updateField}
+            patientId={patientId}
+          />
+        );
       default:
         return null;
     }

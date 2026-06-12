@@ -1,6 +1,18 @@
-import { SPECIALISTS } from "../data/formStructure";
+// ReseauMedical.jsx
+// Section 4 - Réseau médical du patient
+// Génère le rapport Word et le JSON au clic sur "Générer le rapport"
 
-function ReseauMedical({ formData, updateField }) {
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { SPECIALISTS } from "../data/formStructure";
+import { generateReport } from "../services/reportService";
+import { exportToJson } from "../utils/exportJson";
+
+function ReseauMedical({ formData, updateField, patientId }) {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const updateSpecialist = (name, field, value) => {
     updateField("specialistes", {
       ...formData.specialistes,
@@ -11,8 +23,31 @@ function ReseauMedical({ formData, updateField }) {
     });
   };
 
+  const handleGenerate = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      // Génère et télécharge le rapport Word
+      await generateReport(formData, patientId);
+      // Génère et télécharge le JSON
+      exportToJson(formData, patientId);
+      // Redirige vers la page succès
+      navigate("/success");
+    } catch {
+      setError(
+        "Une erreur est survenue lors de la génération du rapport. Veuillez réessayer.",
+      );
+      setLoading(false);
+    }
+  };
+
   return (
     <div>
+      {/* Bouton sauter la section */}
+      <button style={styles.btnSkip} onClick={() => {}}>
+        ▷ Composante non évaluée lors de cette consultation
+      </button>
+
       <h2 style={styles.title}>4. Réseau médical</h2>
       <p style={styles.instruction}>
         Cochez les spécialistes impliqués dans le suivi
@@ -104,7 +139,15 @@ function ReseauMedical({ formData, updateField }) {
         />
       </div>
 
-      <button style={styles.btnGenerate}>Générer le rapport</button>
+      {error && <p style={styles.errorMsg}>{error}</p>}
+
+      <button
+        style={loading ? styles.btnGenerateDisabled : styles.btnGenerate}
+        onClick={handleGenerate}
+        disabled={loading}
+      >
+        {loading ? "Génération en cours..." : "Générer le rapport"}
+      </button>
     </div>
   );
 }
@@ -197,6 +240,11 @@ const styles = {
     resize: "vertical",
     boxSizing: "border-box",
   },
+  errorMsg: {
+    color: "red",
+    fontSize: "14px",
+    marginBottom: "12px",
+  },
   btnGenerate: {
     width: "100%",
     padding: "16px",
@@ -207,6 +255,18 @@ const styles = {
     fontSize: "16px",
     fontWeight: "600",
     cursor: "pointer",
+    marginTop: "8px",
+  },
+  btnGenerateDisabled: {
+    width: "100%",
+    padding: "16px",
+    backgroundColor: "#888",
+    color: "white",
+    border: "none",
+    borderRadius: "10px",
+    fontSize: "16px",
+    fontWeight: "600",
+    cursor: "not-allowed",
     marginTop: "8px",
   },
 };
