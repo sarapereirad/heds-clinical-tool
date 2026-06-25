@@ -1,185 +1,583 @@
-# report_generator.py
-# Génère le rapport Word (.docx) à partir des données du formulaire
-# Utilise python-docx pour créer un document structuré
-
 from docx import Document
 from docx.shared import Pt, RGBColor, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from datetime import datetime
+import io
 
-def format_reponse(valeur: str) -> str:
-    """Convertit les valeurs techniques en texte lisible"""
-    mapping = {
-        'oui': 'Oui',
-        'non': 'Non',
-        'non_evalue': "N'a pas été évalué lors de cette consultation",
-        'masculin': 'Masculin',
-        'feminin': 'Féminin',
-        'neutre': 'Neutre',
-        '': 'Non renseigné',
+
+def get_patient_label(genre: str) -> str:
+    if genre == 'feminin':
+        return 'la patiente'
+    elif genre == 'masculin':
+        return 'le patient'
+    return 'le-la patient·e'
+
+
+def get_pronom(genre: str) -> str:
+    if genre == 'feminin':
+        return 'Elle'
+    elif genre == 'masculin':
+        return 'Il'
+    return 'Il·elle'
+
+def get_de_patient(genre: str) -> str:
+    if genre == 'feminin':
+        return 'de la patiente'
+    elif genre == 'masculin':
+        return 'du patient'
+    return 'du-de la patient·e'
+
+def get_symptomes_atm(symptomes) -> str:
+    labels = {
+        'douleursMachoire': 'douleurs de la mâchoire',
+        'craquements': 'craquements',
+        'deboitages': 'déboitages',
+        'cephalees': 'céphalées',
+        'troublesMastication': 'troubles de la mastication',
     }
-    return mapping.get(valeur, valeur)
+    try:
+        data = symptomes.model_dump()
+    except Exception:
+        data = symptomes.__dict__
+    coches = [labels[k] for k, v in data.items() if v and k in labels]
+    if not coches:
+        return 'symptômes non précisés'
+    return ', '.join(coches)
 
-def add_title(doc, text):
-    """Ajoute un titre de section"""
+def val(texte: str) -> str:
+    if not texte or not texte.strip():
+        return 'Non évalué'
+    return texte.strip()
+
+
+def add_title(doc, text, level=1):
     para = doc.add_paragraph()
     run = para.add_run(text)
     run.bold = True
-    run.font.size = Pt(13)
+    run.font.size = Pt(13) if level == 1 else Pt(11)
     run.font.color.rgb = RGBColor(0x1a, 0x1a, 0x2e)
-    para.space_before = Pt(12)
+    para.space_before = Pt(14)
     para.space_after = Pt(6)
     return para
 
-def add_question(doc, question, reponse, detail=None):
-    """Ajoute une question avec sa réponse"""
+def add_paragraph(doc, text, bold=False, italic=False):
     para = doc.add_paragraph()
-    
-    # Question en gras
-    run_q = para.add_run(f"{question} : ")
-    run_q.bold = True
-    run_q.font.size = Pt(11)
-    
-    # Réponse normale
-    run_r = para.add_run(format_reponse(reponse))
-    run_r.font.size = Pt(11)
-    
-    # Détail si présent
-    if detail:
-        run_d = para.add_run(f" ({detail})")
-        run_d.font.size = Pt(11)
-        run_d.italic = True
+    run = para.add_run(text)
+    run.bold = bold
+    run.italic = italic
+    run.font.size = Pt(11)
+    para.space_after = Pt(6)
+    return para
 
+def add_bullet(doc, text):
+    para = doc.add_paragraph(style='List Bullet')
+    run = para.add_run(text)
+    run.font.size = Pt(11)
     para.space_after = Pt(4)
     return para
 
-def add_notes(doc, notes):
-    """Ajoute les notes libres si présentes"""
+def add_notes_libres(doc, notes: str):
     if notes and notes.strip():
         para = doc.add_paragraph()
-        run = para.add_run("Notes libres : ")
-        run.bold = True
-        run.font.size = Pt(11)
-        run2 = para.add_run(notes)
-        run2.font.size = Pt(11)
-        run2.italic = True
+        run_label = para.add_run("Notes libres : ")
+        run_label.bold = True
+        run_label.font.size = Pt(11)
+        run_notes = para.add_run(notes.strip())
+        run_notes.font.size = Pt(11)
+        run_notes.italic = True
+        para.space_after = Pt(6)
 
-def generate_report(patient_id: str, form_data) -> bytes:
-    """Génère le rapport Word complet et retourne les bytes du fichier"""
-    
+def add_separator(doc):
+    para = doc.add_paragraph()
+    para.paragraph_format.space_after = Pt(6)
+    pPr = para._p.get_or_add_pPr()
+    from docx.oxml.ns import qn
+    from docx.oxml import OxmlElement
+    pBdr = OxmlElement('w:pBdr')
+    bottom = OxmlElement('w:bottom')
+    bottom.set(qn('w:val'), 'single')
+    bottom.set(qn('w:sz'), '6')
+    bottom.set(qn('w:space'), '1')
+    bottom.set(qn('w:color'), 'CCCCCC')
+    pBdr.append(bottom)
+    pPr.append(pBdr)
+
+
+def generate_report(patient_id: str, form_data, destinataire: str = '[Destinataire]') -> bytes:
     doc = Document()
+    genre = form_data.genre or ''
+    patient = get_patient_label(genre)
+    pronom = get_pronom(genre)
+    de_patient = get_de_patient(genre)
 
-    # Marges
     for section in doc.sections:
         section.top_margin = Cm(2.5)
         section.bottom_margin = Cm(2.5)
         section.left_margin = Cm(2.5)
         section.right_margin = Cm(2.5)
 
-    # ── EN-TÊTE ──
-    header = doc.add_paragraph()
-    header.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = header.add_run("Rapport de consultation clinique")
-    run.bold = True
-    run.font.size = Pt(16)
-    run.font.color.rgb = RGBColor(0x1a, 0x1a, 0x2e)
+    from docx.oxml.ns import qn
+    from docx.oxml import OxmlElement
+    from docx.shared import Inches
+
+    date_str = form_data.dateConsultation or datetime.now().strftime('%d/%m/%Y')
+
+    table_header = doc.add_table(rows=1, cols=2)
+    for row in table_header.rows:
+        for cell in row.cells:
+            tc = cell._tc
+            tcPr = tc.get_or_add_tcPr()
+            tcBorders = OxmlElement('w:tcBorders')
+            for border_name in ['top', 'left', 'bottom', 'right']:
+                border = OxmlElement(f'w:{border_name}')
+                border.set(qn('w:val'), 'none')
+                tcBorders.append(border)
+            tcPr.append(tcBorders)
+
+    cell_left = table_header.cell(0, 0)
+    p_left = cell_left.paragraphs[0]
+    run = p_left.add_run('[Adresse expéditeur]')
+    run.italic = True
+    run.font.size = Pt(11)
+
+    cell_right = table_header.cell(0, 1)
+    p_right = cell_right.paragraphs[0]
+    p_right.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    run = p_right.add_run(f'Lausanne, le {date_str}')
+    run.font.size = Pt(11)
 
     doc.add_paragraph()
 
-    # Destinataire et infos
-    doc.add_paragraph(f"Destinataire : ")
-    doc.add_paragraph(f"ID patient : {patient_id}")
-    doc.add_paragraph(f"Date de consultation : {form_data.dateConsultation}")
-    doc.add_paragraph(f"Genre : {format_reponse(form_data.genre)}")
-    doc.add_paragraph(f"Document généré le : {datetime.now().strftime('%d/%m/%Y à %H:%M')}")
+    para_dest = doc.add_paragraph()
+    para_dest.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    lignes = destinataire.split('\n')
+    for i, ligne in enumerate(lignes):
+        run = para_dest.add_run(ligne)
+        run.font.size = Pt(11)
+        run.italic = True
+        if i < len(lignes) - 1:
+            run.add_break()
 
     doc.add_paragraph()
-    doc.add_paragraph("─" * 60)
     doc.add_paragraph()
 
-    # ── SECTION 1 - Douleurs ostéo-articulaires ──
-    add_title(doc, "1. Douleurs ostéo-articulaires")
-
-    add_question(doc, "Présence de pieds plats", form_data.piedsPats)
-    add_question(
-        doc,
-        "Présence de douleurs avec une composante inflammatoire",
-        form_data.douleursInflammatoires,
-        form_data.typeInflammation if form_data.douleursInflammatoires == 'oui' else None
+    para_concerne = doc.add_paragraph()
+    run = para_concerne.add_run(
+        'Concerne : MME/MR [Nom Prénom], [dd/mm/yyyy], [adresse à compléter]'
     )
-    add_question(doc, "Instabilité articulaire avec luxations ou subluxations", form_data.instabiliteArticulaire)
-    add_question(doc, "Antécédents de fractures multiples ou de fragilité", form_data.fracturesMultiples)
-
-    if form_data.fracturesMultiples == 'oui':
-        add_question(doc, "  Ostéoporose connue", form_data.osteoporoseConnue)
-        add_question(doc, "  Traitement spécifique en cours", form_data.traitementOsteoporose)
-        add_question(doc, "  Patient ouvert à un traitement", form_data.patientOuvertTraitement)
-
-    add_question(doc, "Suspicion d'un syndrome du défilé thoracique", form_data.syndromeDefileThoracique)
-    add_notes(doc, form_data.notesOsteo)
+    run.italic = True
+    run.font.size = Pt(11)
 
     doc.add_paragraph()
 
-    # ── SECTION 2 - Douleurs généralisées ──
-    add_title(doc, "2. Douleurs généralisées")
+    add_paragraph(doc, '[Madame / Monsieur],')
+    doc.add_paragraph()
 
-    add_question(
-        doc,
-        "Présence de douleurs primaires, nociplastiques ou de sensibilisation centrale",
-        form_data.douleursNociplastiques,
-        form_data.descriptionDouleursNociplastiques if form_data.douleursNociplastiques == 'oui' else None
+    add_paragraph(doc,
+        "Cette consultation avait pour objectif d'évaluer différents aspects cliniques fréquemment associés "
+        "au syndrome d'Ehlers-Danlos hypermobile (SEDh) ou aux troubles du spectre de l'hypermobilité (HSD), "
+        "afin d'orienter la prise en charge et les éventuelles investigations complémentaires."
     )
-    add_question(doc, "Présence de douleurs musculaires ou fatigabilité excessive", form_data.douleursMusculaires)
-    add_notes(doc, form_data.notesGeneralisees)
-
+    add_paragraph(doc,
+        "Vous trouverez ci-dessous une synthèse des éléments présentant un intérêt clinique ainsi que les "
+        "recommandations qui en découlent."
+    )
     doc.add_paragraph()
 
-    # ── SECTION 3 - Douleurs neuropathiques ──
-    add_title(doc, "3. Douleurs neuropathiques")
 
-    add_question(doc, "Présence de symptômes évocateurs de douleurs neuropathiques", form_data.douleursNeuropathiques)
-    add_notes(doc, form_data.notesNeuropathiques)
+    add_title(doc, 'Douleurs ostéo-articulaires')
 
+    r = form_data.instabiliteArticulaire
+    if r == 'oui':
+        add_paragraph(doc,
+            f"En présence d'une instabilité articulaire, l'utilisation de dispositifs compressifs "
+            f"(vêtements compressifs, orthèses adaptées) ainsi qu'une physiothérapie ciblée sur la "
+            f"proprioception, le contrôle moteur et la stabilisation articulaire doivent être proposées "
+            f"afin d'améliorer la fonction et de réduire la fréquence des épisodes de luxation ou de "
+            f"subluxation. Une liste de physiothérapeutes formés à la prise en charge du SEDh peut être "
+            f"fournie si nécessaire."
+        )
+    elif r == 'non':
+        add_paragraph(doc,
+            f"{patient.capitalize()} ne présente pas d'instabilité articulaire avec luxations ou subluxations."
+        )
+    else:
+        add_paragraph(doc,
+            "La présence d'une instabilité articulaire avec luxations ou subluxations n'a pas été évaluée "
+            "lors de cette consultation."
+        )
+
+    r = form_data.instabiliteATM
+    symptomes_str = get_symptomes_atm(form_data.instabiliteATMSymptomes)
+
+    if r == 'oui':
+        pec = form_data.instabiliteATMPriseEnCharge
+        physio = form_data.instabiliteATMPhysio
+        chir = form_data.instabiliteATMChirurgie
+
+        if pec == 'oui':
+            if physio == 'oui' and chir == 'oui':
+                add_paragraph(doc,
+                    f"{patient.capitalize()} présente une instabilité des ATM associée à {symptomes_str}. "
+                    f"{pronom} bénéficie actuellement d'une physiothérapie spécifique ainsi que d'un suivi en "
+                    f"chirurgie maxillo-faciale."
+                )
+            elif physio == 'oui' and chir != 'oui':
+                add_paragraph(doc,
+                    f"{patient.capitalize()} présente une instabilité des ATM associée à {symptomes_str}. "
+                    f"{pronom} bénéficie actuellement d'une physiothérapie spécifique."
+                )
+            elif physio != 'oui' and chir == 'oui':
+                add_paragraph(doc,
+                    f"{patient.capitalize()} présente une instabilité des ATM associée à {symptomes_str}. "
+                    f"{pronom} bénéficie actuellement d'un suivi en chirurgie maxillo-faciale sans "
+                    f"physiothérapie spécifique à ce stade."
+                )
+            else:
+                add_paragraph(doc,
+                    f"{patient.capitalize()} présente une instabilité des ATM associée à {symptomes_str}. "
+                    f"Une prise en charge est rapportée, sans précision concernant son type."
+                )
+        elif pec == 'non':
+            add_paragraph(doc,
+                f"{patient.capitalize()} présente {symptomes_str}, évocateurs d'une instabilité des "
+                f"articulations temporo-mandibulaires (ATM). Aucune prise en charge spécifique n'est "
+                f"actuellement rapportée. Une évaluation en chirurgie maxillo-faciale pourrait être proposée "
+                f"afin d'estimer le potentiel de réhabilitation, notamment par une physiothérapie spécifique."
+            )
+        else:
+            add_paragraph(doc,
+                f"{patient.capitalize()} présente {symptomes_str}, évocateurs d'une instabilité des "
+                f"articulations temporo-mandibulaires (ATM). Les modalités de prise en charge n'ont pas été "
+                f"évaluées lors de cette consultation."
+            )
+    elif r == 'non':
+        add_paragraph(doc,
+            "Aucun signe spécifique en faveur d'une instabilité des articulations temporo-mandibulaires "
+            "(ATM) n'a été identifié."
+        )
+    else:
+        add_paragraph(doc,
+            "La présence d'une instabilité des articulations temporo-mandibulaires (ATM) n'a pas été "
+            "évaluée lors de cette consultation."
+        )
+
+    r = form_data.douleursInflammatoires
+    type_inflam = val(form_data.typeInflammation)
+    if r == 'oui':
+        add_paragraph(doc,
+            f"Les douleurs {de_patient} présentent une composante inflammatoire de type {type_inflam}. "
+            f"Une évaluation par un rhumatologue serait indiquée afin de clarifier le diagnostic. "
+            f"Si localisée, une approche interventionnelle par un antalgiste pourrait être considérée."
+        )
+    elif r == 'non':
+        add_paragraph(doc, "Les douleurs ne semblent pas être de type inflammatoire ou dégénérative.")
+    else:
+        add_paragraph(doc,
+            "La présence de douleurs avec une composante inflammatoire n'a pas été évaluée lors de "
+            "cette consultation."
+        )
+
+    r = form_data.fracturesMultiples
+    if r == 'oui':
+        osteo = form_data.osteoporoseConnue
+        traitement = form_data.traitementOsteoporose
+        ouvert = form_data.patientOuvertTraitement
+
+        if osteo == 'oui':
+            if traitement == 'oui':
+                add_paragraph(doc, "Une ostéoporose est connue et prise en charge.")
+            elif traitement == 'non':
+                if ouvert == 'oui':
+                    add_paragraph(doc,
+                        f"Compte tenu des antécédents de fractures multiples et/ou de fractures de fragilité, "
+                        f"une évaluation de la densité minérale osseuse et des facteurs de risque de fragilité "
+                        f"osseuse peut être discutée si elle n'a pas déjà été effectuée. Une prise en charge "
+                        f"adaptée est recommandée en cas d'ostéoporose ou d'ostéopénie significative."
+                    )
+                elif ouvert == 'non':
+                    add_paragraph(doc,
+                        f"{patient.capitalize()} ne souhaite pas mettre en place un traitement."
+                    )
+                else:
+                    add_paragraph(doc,
+                        f"L'ouverture {de_patient} à l'idée d'un traitement n'a pas été évaluée lors de "
+                        f"cette consultation."
+                    )
+            else:
+                add_paragraph(doc,
+                    "Le traitement spécifique de l'ostéoporose en cours n'a pas été évalué lors de "
+                    "cette consultation."
+                )
+        elif osteo == 'non':
+            add_paragraph(doc,
+                f"{patient.capitalize()} ne présente pas d'antécédents de fractures multiples et/ou de "
+                f"fractures survenues après un traumatisme mineur (fractures de fragilité)."
+            )
+        else:
+            add_paragraph(doc, "L'ostéoporose connue n'a pas été évaluée lors de cette consultation.")
+    elif r == 'non':
+        add_paragraph(doc, f"{patient.capitalize()} ne présente pas de signes de fragilité osseuse.")
+    else:
+        add_paragraph(doc,
+            "Les antécédents de fractures multiples et/ou de fractures de fragilité n'ont pas été "
+            "évalués lors de cette consultation."
+        )
+
+    r = form_data.syndromeDefileThoracique
+    if r == 'oui':
+        connu = form_data.syndromeDefileConnu
+        pec = form_data.syndromeDefilePriseEnCharge
+        if connu == 'oui':
+            if pec == 'oui':
+                add_paragraph(doc, "Un SDT est connu et pris en charge.")
+            elif pec == 'non':
+                add_paragraph(doc,
+                    "Un SDT est connu mais aucune prise en charge n'est actuellement rapportée."
+                )
+            else:
+                add_paragraph(doc,
+                    "Un SDT est connu. La prise en charge n'a pas été évaluée lors de cette consultation."
+                )
+        elif connu == 'non':
+            add_paragraph(doc,
+                f"Les symptômes présentés par {patient} évoquent la présence d'un éventuel SDT. "
+                f"Une évaluation plus poussée par un angiologue serait indiquée."
+            )
+        else:
+            add_paragraph(doc,
+                "La présence d'un syndrome du défilé thoracique n'a pas été évaluée lors de cette consultation."
+            )
+    elif r == 'non':
+        add_paragraph(doc,
+            f"{patient.capitalize()} ne présente pas de signe évocateur d'un syndrome du défilé "
+            f"thoracique (SDT)."
+        )
+    else:
+        add_paragraph(doc,
+            "La suspicion d'un syndrome du défilé thoracique (SDT) n'a pas été évaluée lors de "
+            "cette consultation."
+        )
+
+    r = form_data.piedsPats
+    podo = form_data.piedsPatsPodiologie
+    if r == 'oui':
+        if podo == 'oui':
+            add_paragraph(doc,
+                f"{patient.capitalize()} a les pieds plats et bénéficie d'une prise en charge en podologie."
+            )
+        elif podo == 'non':
+            add_paragraph(doc,
+                f"{patient.capitalize()} a les pieds plats et n'a pas encore de prise en charge. "
+                f"Une consultation chez un podologue spécialisé dans les semelles orthopédiques est recommandée."
+            )
+        else:
+            add_paragraph(doc,
+                f"{patient.capitalize()} a les pieds plats. La prise en charge par un podologue n'a pas "
+                f"été évaluée lors de cette consultation."
+            )
+    elif r == 'non':
+        add_paragraph(doc, f"{patient.capitalize()} n'a pas les pieds plats.")
+    else:
+        add_paragraph(doc,
+            "La présence de pieds plats n'a pas été évaluée lors de cette consultation."
+        )
+
+    add_notes_libres(doc, form_data.notesOsteo)
     doc.add_paragraph()
 
-    # ── SECTION 4 - Réseau médical ──
-    add_title(doc, "4. Réseau médical")
 
-    specialistes_inclus = {
-        nom: data for nom, data in form_data.specialistes.items()
-        if data.checked and data.inclureRapport
+    add_title(doc, 'Douleurs généralisées')
+
+    r = form_data.douleursNociplastiques
+    desc = val(form_data.descriptionDouleursNociplastiques)
+    if r == 'oui':
+        add_paragraph(doc,
+            f"Les douleurs {de_patient} ont une composante nociplastique (de type {desc}) qui demande "
+            f"une prise en charge globale incluant une psycho-éducation de la douleur, une modulation de "
+            f"l'hypervigilance et un ré-entraînement de la réponse de relaxation. Des approches "
+            f"médicamenteuses spécifiques avec des anti-dépresseurs noradrénergiques ou des médicaments "
+            f"gabaergiques (P.O.) ou possiblement des perfusions de lidocaïne ou kétamine dans un centre "
+            f"d'antalgie peuvent être considérés. L'application de TENS avec une éducation thérapeutique "
+            f"adaptée et associée à une stimulation du nerf vague peut être aidante."
+        )
+    elif r == 'non':
+        add_paragraph(doc, "Les douleurs n'ont pas de composante nociplastique.")
+    else:
+        add_paragraph(doc,
+            "La présence de douleurs primaires, nociplastiques ou de signes de sensibilisation centrale "
+            "n'a pas été évaluée lors de cette consultation."
+        )
+
+    r = form_data.douleursMusculaires
+    if r == 'oui':
+        add_paragraph(doc,
+            f"En présence de douleurs musculaires et d'une fatigabilité importante, il est recommandé de "
+            f"rechercher des déficits ou troubles pouvant y contribuer (p.ex. dosages de vitamine D, "
+            f"ferritine, TSH, troubles du sommeil). Une physiothérapie spécialisée et un reconditionnement "
+            f"progressif sont nécessaires pour diminuer ce type de douleurs."
+        )
+    elif r == 'non':
+        add_paragraph(doc,
+            f"{patient.capitalize()} ne présente pas de douleur musculaire ou de fatigabilité excessive."
+        )
+    else:
+        add_paragraph(doc,
+            "La présence de douleurs musculaires ou d'une fatigabilité excessive n'a pas été évaluée "
+            "lors de cette consultation."
+        )
+
+    add_notes_libres(doc, form_data.notesGeneralisees)
+    doc.add_paragraph()
+
+    add_title(doc, 'Douleurs neuropathiques')
+
+    r = form_data.douleursNeuropathiques
+    if r == 'oui':
+        diagnostic = form_data.diagnosticNeuropathique
+        diag_texte = val(form_data.diagnosticNeuropathiqueTexte)
+        pec = form_data.priseEnChargeNeuropathique
+
+        if diagnostic == 'oui':
+            if pec == 'oui':
+                add_paragraph(doc,
+                    f"{patient.capitalize()} présente des douleurs à caractère neuropathique. Un diagnostic "
+                    f"de {diag_texte} a été posé et bénéficie actuellement d'une prise en charge spécifique."
+                )
+            elif pec == 'non':
+                add_paragraph(doc,
+                    f"{patient.capitalize()} présente des douleurs à caractère neuropathique. Un diagnostic "
+                    f"de {diag_texte} a été posé. Aucune prise en charge spécifique n'est actuellement "
+                    f"rapportée. Un traitement spécifique de la douleur neuropathique pourrait être "
+                    f"reconsidéré, éventuellement avec l'aide d'un antalgiste."
+                )
+            else:
+                add_paragraph(doc,
+                    f"{patient.capitalize()} présente des douleurs à caractère neuropathique. Un diagnostic "
+                    f"de {diag_texte} a été posé. Les modalités de prise en charge n'ont pas été évaluées "
+                    f"lors de cette consultation."
+                )
+        elif diagnostic == 'non':
+            add_paragraph(doc,
+                f"Afin d'évaluer la cause de ces douleurs à caractère neuropathique, une évaluation chez "
+                f"un neurologue est recommandée, qui jugera la pertinence d'exclure une atteinte des grosses "
+                f"fibres nerveuses (mono ou poly-neuropathie). Si cette condition n'est pas retenue, une "
+                f"évaluation d'une éventuelle neuropathie des petites fibres nerveuses pourrait être indiquée. "
+                f"Dans ce cas, le centre d'antalgie du CHUV propose une évaluation combinant un test de la "
+                f"fonction des fibres (QST) et une biopsie cutanée afin de déterminer la densité "
+                f"intraépidermale des petites fibres."
+            )
+            doc.add_paragraph()
+            add_paragraph(doc,
+                f"En parallèle de l'élaboration du diagnostic, un traitement symptomatique doit être envisagé. "
+                f"Les approches thérapeutiques suivantes peuvent être considérées : TENS avec une éducation "
+                f"thérapeutique adaptée, traitements avec des agents anti-douleurs neuropathiques "
+                f"(antidépresseurs noradrénergiques, gabapentinoïdes), traitements topiques de lidocaïne ou "
+                f"à base d'amitriptyline et kétamine, perfusion intraveineuse de kétamine ou de lidocaïne."
+            )
+        else:
+            add_paragraph(doc,
+                f"{patient.capitalize()} présente des douleurs à caractère neuropathique. L'existence d'un "
+                f"diagnostic spécifique n'a pas été évaluée lors de cette consultation."
+            )
+    elif r == 'non':
+        add_paragraph(doc,
+            f"{patient.capitalize()} ne présente pas de signes évocateurs de douleurs neuropathiques."
+        )
+    else:
+        add_paragraph(doc,
+            "La présence de douleurs neuropathiques n'a pas été évaluée lors de cette consultation."
+        )
+
+    add_notes_libres(doc, form_data.notesNeuropathiques)
+    doc.add_paragraph()
+
+    add_title(doc, 'Recommandations de traitements thérapeutiques')
+    add_paragraph(doc, "Nous avons discuté des recommandations thérapeutiques suivantes :")
+
+    recs = form_data.recommandations
+    textes_recs = {
+        'psychoeducation': (
+            "une psychoéducation sur le syndrome d'Ehlers-Danlos (hEDS/HSD), la douleur et le "
+            "reconditionnement comme pilier du traitement."
+        ),
+        'reconditionnement': (
+            "un reconditionnement musculaire progressif pour la stabilisation articulaire, la diminution "
+            "des contractures musculaires, la gestion de l'effort, et des adaptations des mouvements pour "
+            "réduire les risques de luxations et blessures. Ceci est entrepris par des physiothérapeutes "
+            "spécialisés. De plus, en auto-soins, les patients sont encouragés à trouver une activité "
+            "physique progressive. Celles particulièrement recommandées sont : Pilates, qi gong, tai-chi, "
+            "natation, marche, vélo couché. "
+            "NB : Les ajustements chiropratiques et le yoga ne sont pas contre-indiqués, mais comme tous "
+            "les autres traitements physiques, ils doivent être pratiqués de manière à éviter les "
+            "subluxations ou luxations iatrogènes, et idéalement par des praticiens qui ont des bonnes "
+            "connaissances de SEDh/TSH."
+        ),
+        'ergotherapie': (
+            "l'ergothérapie qui peut adapter des aides techniques et accompagner les modifications de "
+            "l'utilisation corporelle, l'ergonomie."
+        ),
+        'tens': (
+            "le test accompagné d'un appareil de neurostimulation périphérique TENS +- stimulation "
+            "du nerf vague."
+        ),
+        'antalgiques': (
+            "les antalgiques sont à considérer et tester, en fonction des contre-indications/intolérances, "
+            "y.c. : AINS, paracétamol, métamizole, gabapentinoïdes, antidépresseurs tricycliques, CBD/THC."
+        ),
+        'topiques': (
+            "des traitements topiques peuvent être aidants tels que la capsaïcine, les AINS, la lidocaïne, "
+            "l'arnica."
+        ),
+        'gestion': (
+            "les techniques de cohérence cardiaque et techniques psycho-corporelles pour la gestion de la "
+            "douleur, de l'anxiété et du sommeil."
+        ),
+        'chaleur': (
+            "la chaleur mérite d'être testée (bains chauds, natation/exercices en piscine chauffée) pour "
+            "favoriser la relaxation musculaire."
+        ),
+        'acupuncture': (
+            "l'acupuncture peut avoir des bénéfices notamment pour des céphalées, des douleurs "
+            "inflammatoires ou des symptômes de dysautonomie."
+        ),
+        'complementsAlimentaires': (
+            "des compléments alimentaires peuvent être testés en l'absence d'intolérances tels que : "
+            "les acides gras oméga-3 (huile de poisson), le curcuma, l'acide alpha-lipoïque, la carnitine "
+            "(1 g 3 fois par jour)."
+        ),
     }
 
-    if specialistes_inclus:
-        for nom, data in specialistes_inclus.items():
-            para = doc.add_paragraph()
-            run = para.add_run(f"• {nom}")
-            run.bold = True
-            run.font.size = Pt(11)
+    try:
+        recs_dict = recs.model_dump()
+    except Exception:
+        recs_dict = recs.__dict__
 
-            if data.nom:
-                doc.add_paragraph(f"  Nom : {data.nom}").runs[0].font.size = Pt(11)
-            if data.adresse:
-                doc.add_paragraph(f"  Adresse : {data.adresse}").runs[0].font.size = Pt(11)
-            if data.contact:
-                doc.add_paragraph(f"  Contact : {data.contact}").runs[0].font.size = Pt(11)
+    has_recs = any(recs_dict.values())
+
+    if has_recs:
+        for key, texte in textes_recs.items():
+            if recs_dict.get(key):
+                add_bullet(doc, texte)
     else:
-        doc.add_paragraph("Aucun spécialiste inclus dans le rapport.").runs[0].font.size = Pt(11)
+        add_paragraph(doc, "Aucune recommandation thérapeutique sélectionnée.", italic=True)
 
-    add_notes(doc, form_data.notesReseau)
+    if form_data.recommandationsTexteLibre and form_data.recommandationsTexteLibre.strip():
+        doc.add_paragraph()
+        add_paragraph(doc, "De plus, nous avons discuté de propositions thérapeutiques spécifiques :")
+        add_paragraph(doc, form_data.recommandationsTexteLibre)
 
-    # ── PIED DE PAGE ──
     doc.add_paragraph()
-    doc.add_paragraph("─" * 60)
-    footer = doc.add_paragraph()
-    footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = footer.add_run("Document généré automatiquement par l'outil hEDS d'évaluation clinique — CEMIC / CHUV")
-    run.font.size = Pt(9)
-    run.font.color.rgb = RGBColor(0x88, 0x88, 0x88)
-    run.italic = True
 
-    # Convertir en bytes
-    import io
+    add_separator(doc)
+    doc.add_paragraph()
+    add_paragraph(doc,
+        "Si vous avez des questions concernant ce rapport, nous restons à votre disposition. "
+        "N'hésitez pas à nous contacter via les coordonnées fournies ci-dessus."
+    )
+    doc.add_paragraph()
+    add_paragraph(doc, "Avec nos salutations les plus respectueuses.")
+
     buffer = io.BytesIO()
     doc.save(buffer)
     buffer.seek(0)

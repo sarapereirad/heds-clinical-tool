@@ -39,7 +39,13 @@ function InfoGenerales({ formData, updateField, onNext }) {
                 onChange={() => updateField("genre", g)}
                 style={styles.radio}
               />
-              <span>{g.charAt(0).toUpperCase() + g.slice(1)}</span>
+              <span>
+                {g === "masculin"
+                  ? "Masculin"
+                  : g === "feminin"
+                    ? "Féminin"
+                    : "Non binaire"}
+              </span>
             </label>
           ))}
         </div>

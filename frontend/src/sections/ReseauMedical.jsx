@@ -1,12 +1,7 @@
-// ReseauMedical.jsx
-// Section 4 - Réseau médical du patient
-// Génère le rapport Word et le JSON au clic sur "Générer le rapport"
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SPECIALISTS } from "../data/formStructure";
 import { generateReport } from "../services/reportService";
-import { exportToJson } from "../utils/exportJson";
 
 function ReseauMedical({ formData, updateField, patientId }) {
   const navigate = useNavigate();
@@ -27,11 +22,7 @@ function ReseauMedical({ formData, updateField, patientId }) {
     setLoading(true);
     setError("");
     try {
-      // Génère et télécharge le rapport Word
       await generateReport(formData, patientId);
-      // Génère et télécharge le JSON
-      exportToJson(formData, patientId);
-      // Redirige vers la page succès
       navigate("/success");
     } catch {
       setError(
@@ -43,7 +34,6 @@ function ReseauMedical({ formData, updateField, patientId }) {
 
   return (
     <div>
-      {/* Bouton sauter la section */}
       <button style={styles.btnSkip} onClick={() => {}}>
         ▷ Composante non évaluée lors de cette consultation
       </button>
@@ -78,9 +68,13 @@ function ReseauMedical({ formData, updateField, patientId }) {
                   type="text"
                   placeholder="Nom du spécialiste..."
                   value={data.nom || ""}
-                  onChange={(e) =>
-                    updateSpecialist(specialist, "nom", e.target.value)
-                  }
+                  onChange={(e) => {
+                    const val = e.target.value.replace(
+                      /[^a-zA-ZÀ-ÿ\s\-'.]/g,
+                      "",
+                    );
+                    updateSpecialist(specialist, "nom", val);
+                  }}
                   style={styles.textInput}
                 />
 
@@ -95,16 +89,35 @@ function ReseauMedical({ formData, updateField, patientId }) {
                   style={styles.textInput}
                 />
 
-                <p style={styles.subLabel}>Contact</p>
-                <input
-                  type="text"
-                  placeholder="Téléphone, email..."
-                  value={data.contact || ""}
-                  onChange={(e) =>
-                    updateSpecialist(specialist, "contact", e.target.value)
-                  }
-                  style={styles.textInput}
-                />
+                <p style={styles.subLabel}>Téléphone</p>
+                <div style={styles.phoneRow}>
+                  <select
+                    value={data.indicatif || "+41"}
+                    onChange={(e) =>
+                      updateSpecialist(specialist, "indicatif", e.target.value)
+                    }
+                    style={styles.selectIndicatif}
+                  >
+                    <option value="+41">🇨🇭 +41</option>
+                    <option value="+33">🇫🇷 +33</option>
+                    <option value="+32">🇧🇪 +32</option>
+                    <option value="+352">🇱🇺 +352</option>
+                    <option value="+49">🇩🇪 +49</option>
+                    <option value="+39">🇮🇹 +39</option>
+                    <option value="+44">🇬🇧 +44</option>
+                    <option value="+1">🇺🇸 +1</option>
+                  </select>
+                  <input
+                    type="tel"
+                    placeholder="000 000 00 00"
+                    value={data.telephone || ""}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9\s]/g, "");
+                      updateSpecialist(specialist, "telephone", val);
+                    }}
+                    style={styles.phoneInput}
+                  />
+                </div>
 
                 <label style={styles.checkboxRow}>
                   <input
@@ -268,6 +281,27 @@ const styles = {
     fontWeight: "600",
     cursor: "not-allowed",
     marginTop: "8px",
+  },
+  phoneRow: {
+    display: "flex",
+    gap: "8px",
+    alignItems: "center",
+  },
+  selectIndicatif: {
+    padding: "8px",
+    border: "1px solid #ccc",
+    borderRadius: "8px",
+    fontSize: "14px",
+    backgroundColor: "white",
+    cursor: "pointer",
+  },
+  phoneInput: {
+    flex: 1,
+    padding: "8px 12px",
+    border: "1px solid #ccc",
+    borderRadius: "8px",
+    fontSize: "14px",
+    boxSizing: "border-box",
   },
 };
 

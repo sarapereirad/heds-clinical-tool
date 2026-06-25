@@ -7,7 +7,25 @@ export const SECTIONS = [
     label: "3. Douleurs neuropathiques",
     skippable: true,
   },
-  { id: "reseau", label: "4. Réseau médical", skippable: true },
+  {
+    id: "recommandations",
+    label: "4. Recommandations thérapeutiques",
+    skippable: true,
+  },
+  { id: "reseau", label: "5. Réseau médical", skippable: false },
+];
+
+export const RECOMMANDATIONS_LIST = [
+  { id: "psychoeducation", label: "Psychoéducation" },
+  { id: "reconditionnement", label: "Reconditionnement musculaire" },
+  { id: "ergotherapie", label: "Ergothérapie" },
+  { id: "tens", label: "TENS" },
+  { id: "antalgiques", label: "Antalgiques" },
+  { id: "topiques", label: "Topiques" },
+  { id: "gestion", label: "Gestion" },
+  { id: "chaleur", label: "Chaleur" },
+  { id: "acupuncture", label: "Acupuncture" },
+  { id: "complementsAlimentaires", label: "Compléments alimentaires" },
 ];
 
 export const SPECIALISTS = [
@@ -28,4 +46,12 @@ export const SPECIALISTS = [
   "Médecin du sport",
   "Podiatre",
   "Dermatologue",
+];
+
+export const ATM_SYMPTOMES = [
+  { id: "douleursMachoire", label: "Douleurs de la mâchoire" },
+  { id: "craquements", label: "Craquements" },
+  { id: "deboitages", label: "Déboitages" },
+  { id: "cephalees", label: "Céphalées" },
+  { id: "troublesMastication", label: "Troubles de la mastication" },
 ];

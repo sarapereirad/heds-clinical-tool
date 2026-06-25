@@ -8,6 +8,7 @@ import InfoGenerales from "../sections/InfoGenerales";
 import DouleursOsteo from "../sections/DouleursOsteo";
 import DouleursGeneralisees from "../sections/DouleursGeneralisees";
 import DouleursNeuropathiques from "../sections/DouleursNeuropathiques";
+import Recommandations from "../sections/Recommandations";
 import ReseauMedical from "../sections/ReseauMedical";
 
 function EvaluationPage({ importedData }) {
@@ -18,17 +19,24 @@ function EvaluationPage({ importedData }) {
     sectionStatus,
     formData,
     updateField,
+    updateNestedField,
     goToNextSection,
     skipSection,
     goToSection,
   } = useFormState(importedData);
 
+  const handleSkip = () => {
+    const result = skipSection();
+    if (result === "redirect") navigate("/");
+  };
+
   const renderSection = () => {
     const props = {
       formData,
       updateField,
+      updateNestedField,
       onNext: goToNextSection,
-      onSkip: skipSection,
+      onSkip: handleSkip,
     };
     switch (currentSectionIndex) {
       case 0:
@@ -40,6 +48,8 @@ function EvaluationPage({ importedData }) {
       case 3:
         return <DouleursNeuropathiques {...props} />;
       case 4:
+        return <Recommandations {...props} />;
+      case 5:
         return (
           <ReseauMedical
             formData={formData}
@@ -74,7 +84,6 @@ function EvaluationPage({ importedData }) {
           sectionStatus={sectionStatus}
           onGoToSection={goToSection}
         />
-
         <div style={styles.content}>{renderSection()}</div>
       </div>
     </div>
@@ -114,12 +123,6 @@ const styles = {
     padding: "32px 48px",
     backgroundColor: "#fff",
     overflowY: "auto",
-  },
-  sectionTitle: {
-    fontSize: "22px",
-    fontWeight: "700",
-    color: "#1a1a2e",
-    marginBottom: "28px",
   },
 };
 
