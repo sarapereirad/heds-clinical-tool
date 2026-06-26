@@ -1,7 +1,3 @@
-// importJson.js
-// Lit un fichier JSON exporté précédemment et retourne les données du formulaire
-// Utilisé pour réimporter une évaluation lors d'une consultation de suivi
-
 export function importFromJson(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -10,7 +6,6 @@ export function importFromJson(file) {
       try {
         const parsed = JSON.parse(event.target.result);
 
-        // Vérifie que le fichier est bien un export valide
         if (!parsed.formData || !parsed.patientId) {
           reject(new Error("Fichier JSON invalide ou incompatible."));
           return;
@@ -20,6 +15,7 @@ export function importFromJson(file) {
           formData: parsed.formData,
           patientId: parsed.patientId,
           exportDate: parsed.exportDate,
+          sectionStatus: parsed.sectionStatus || {},
         });
       } catch {
         reject(new Error("Impossible de lire le fichier JSON."));

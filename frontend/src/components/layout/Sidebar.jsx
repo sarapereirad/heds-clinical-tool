@@ -57,6 +57,10 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     gap: "4px",
+    position: "sticky",
+    top: 0,
+    height: "100vh",
+    overflowY: "auto",
   },
   title: {
     fontSize: "11px",

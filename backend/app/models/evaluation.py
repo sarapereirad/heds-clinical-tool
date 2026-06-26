@@ -6,8 +6,6 @@ class SpecialisteData(BaseModel):
     nom: Optional[str] = ""
     adresse: Optional[str] = ""
     telephone: Optional[str] = ""
-    indicatif: Optional[str] = "+41"
-    inclureRapport: Optional[bool] = False
 
 class InstabiliteATMSymptomes(BaseModel):
     douleursMachoire: Optional[bool] = False
@@ -77,3 +75,4 @@ class FormData(BaseModel):
 class EvaluationRequest(BaseModel):
     patientId: str
     formData: FormData
+    sectionStatus: Optional[dict] = {}

@@ -3,7 +3,7 @@ import { SECTIONS } from "../data/formStructure";
 
 function generatePatientId() {
   const year = new Date().getFullYear();
-  const random = Math.floor(1000 + Math.random() * 9000);
+  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
   return `PAT-${year}-${random}`;
 }
 
@@ -15,7 +15,10 @@ export function useFormState(importedData = null) {
   const [patientId] = useState(generatePatientId);
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [sectionStatus, setSectionStatus] = useState(
-    Object.fromEntries(SECTIONS.map((s) => [s.id, "pending"])),
+    importedData?.sectionStatus &&
+      Object.keys(importedData.sectionStatus).length > 0
+      ? importedData.sectionStatus
+      : Object.fromEntries(SECTIONS.map((s) => [s.id, "pending"])),
   );
 
   const [formData, setFormData] = useState(
@@ -85,6 +88,10 @@ export function useFormState(importedData = null) {
   );
 
   const updateField = (field, value) => {
+    const currentId = SECTIONS[currentSectionIndex].id;
+    if (sectionStatus[currentId] === "skipped") {
+      setSectionStatus((prev) => ({ ...prev, [currentId]: "pending" }));
+    }
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -107,6 +114,71 @@ export function useFormState(importedData = null) {
     const currentId = SECTIONS[currentSectionIndex].id;
     const newStatus = { ...sectionStatus, [currentId]: "skipped" };
     setSectionStatus(newStatus);
+
+    const resetFields = {
+      osteo: {
+        instabiliteArticulaire: "",
+        instabiliteATM: "",
+        instabiliteATMSymptomes: {
+          douleursMachoire: false,
+          craquements: false,
+          deboitages: false,
+          cephalees: false,
+          troublesMastication: false,
+        },
+        instabiliteATMPriseEnCharge: "",
+        instabiliteATMPhysio: "",
+        instabiliteATMChirurgie: "",
+        douleursInflammatoires: "",
+        typeInflammation: "",
+        fracturesMultiples: "",
+        osteoporoseConnue: "",
+        traitementOsteoporose: "",
+        patientOuvertTraitement: "",
+        syndromeDefileThoracique: "",
+        syndromeDefileConnu: "",
+        syndromeDefilePriseEnCharge: "",
+        piedsPats: "",
+        piedsPatsPodiologie: "",
+        notesOsteo: "",
+      },
+      generalisees: {
+        douleursNociplastiques: "",
+        descriptionDouleursNociplastiques: "",
+        douleursMusculaires: "",
+        notesGeneralisees: "",
+      },
+      neuropathiques: {
+        douleursNeuropathiques: "",
+        diagnosticNeuropathique: "",
+        diagnosticNeuropathiqueTexte: "",
+        priseEnChargeNeuropathique: "",
+        notesNeuropathiques: "",
+      },
+      recommandations: {
+        recommandations: {
+          psychoeducation: false,
+          reconditionnement: false,
+          ergotherapie: false,
+          tens: false,
+          antalgiques: false,
+          topiques: false,
+          gestion: false,
+          chaleur: false,
+          acupuncture: false,
+          complementsAlimentaires: false,
+        },
+        recommandationsTexteLibre: "",
+      },
+      reseau: {
+        specialistes: {},
+        notesReseau: "",
+      },
+    };
+
+    if (resetFields[currentId]) {
+      setFormData((prev) => ({ ...prev, ...resetFields[currentId] }));
+    }
 
     const allSkipped = SECTIONS.slice(1).every(
       (s) => newStatus[s.id] === "skipped",

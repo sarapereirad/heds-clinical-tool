@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { SPECIALISTS } from "../data/formStructure";
 import { generateReport } from "../services/reportService";
 
-function ReseauMedical({ formData, updateField, patientId }) {
+function ReseauMedical({ formData, updateField, patientId, sectionStatus }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -19,10 +19,21 @@ function ReseauMedical({ formData, updateField, patientId }) {
   };
 
   const handleGenerate = async () => {
+    const sectionsIncompletes = Object.entries(sectionStatus).filter(
+      ([id, status]) => status === "pending" && id !== "reseau",
+    );
+
+    if (sectionsIncompletes.length > 0) {
+      setError(
+        "Veuillez compléter ou marquer comme non évaluées toutes les sections avant de générer le rapport.",
+      );
+      return;
+    }
+
     setLoading(true);
     setError("");
     try {
-      await generateReport(formData, patientId);
+      await generateReport(formData, patientId, sectionStatus);
       navigate("/success");
     } catch {
       setError(
@@ -34,10 +45,6 @@ function ReseauMedical({ formData, updateField, patientId }) {
 
   return (
     <div>
-      <button style={styles.btnSkip} onClick={() => {}}>
-        ▷ Composante non évaluée lors de cette consultation
-      </button>
-
       <h2 style={styles.title}>4. Réseau médical</h2>
       <p style={styles.instruction}>
         Cochez les spécialistes impliqués dans le suivi
@@ -90,52 +97,16 @@ function ReseauMedical({ formData, updateField, patientId }) {
                 />
 
                 <p style={styles.subLabel}>Téléphone</p>
-                <div style={styles.phoneRow}>
-                  <select
-                    value={data.indicatif || "+41"}
-                    onChange={(e) =>
-                      updateSpecialist(specialist, "indicatif", e.target.value)
-                    }
-                    style={styles.selectIndicatif}
-                  >
-                    <option value="+41">🇨🇭 +41</option>
-                    <option value="+33">🇫🇷 +33</option>
-                    <option value="+32">🇧🇪 +32</option>
-                    <option value="+352">🇱🇺 +352</option>
-                    <option value="+49">🇩🇪 +49</option>
-                    <option value="+39">🇮🇹 +39</option>
-                    <option value="+44">🇬🇧 +44</option>
-                    <option value="+1">🇺🇸 +1</option>
-                  </select>
-                  <input
-                    type="tel"
-                    placeholder="000 000 00 00"
-                    value={data.telephone || ""}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/[^0-9\s]/g, "");
-                      updateSpecialist(specialist, "telephone", val);
-                    }}
-                    style={styles.phoneInput}
-                  />
-                </div>
-
-                <label style={styles.checkboxRow}>
-                  <input
-                    type="checkbox"
-                    checked={data.inclureRapport || false}
-                    onChange={(e) =>
-                      updateSpecialist(
-                        specialist,
-                        "inclureRapport",
-                        e.target.checked,
-                      )
-                    }
-                    style={styles.checkbox}
-                  />
-                  <span style={styles.inclureLabel}>
-                    Inclure dans le rapport
-                  </span>
-                </label>
+                <input
+                  type="tel"
+                  placeholder="Ex : +41 12 345 67 89"
+                  value={data.telephone || ""}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^0-9+\s]/g, "");
+                    updateSpecialist(specialist, "telephone", val);
+                  }}
+                  style={styles.textInput}
+                />
               </div>
             )}
           </div>
@@ -234,10 +205,6 @@ const styles = {
     borderRadius: "8px",
     fontSize: "14px",
     boxSizing: "border-box",
-  },
-  inclureLabel: {
-    fontSize: "13px",
-    color: "#555",
   },
   fieldGroup: {
     marginBottom: "24px",

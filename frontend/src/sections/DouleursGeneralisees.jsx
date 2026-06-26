@@ -1,32 +1,9 @@
-import { useState } from "react";
 import QuestionBlock from "../components/form/QuestionBlock";
 import ConditionalBlock from "../components/form/ConditionalBlock";
 
 function DouleursGeneralisees({ formData, updateField, onNext, onSkip }) {
-  const [showError, setShowError] = useState(false);
-
-  const hasUnanswered = () => {
-    return !formData.douleursNociplastiques || !formData.douleursMusculaires;
-  };
-
-  const handleNext = () => {
-    if (hasUnanswered()) {
-      setShowError(true);
-      window.scrollTo(0, 0);
-    } else {
-      setShowError(false);
-      onNext();
-    }
-  };
-
   return (
     <div>
-      {showError && (
-        <div style={styles.errorBanner}>
-          Veuillez répondre à toutes les questions avant de continuer.
-        </div>
-      )}
-
       <button style={styles.btnSkip} onClick={onSkip}>
         ▷ Composante non évaluée lors de cette consultation
       </button>
@@ -42,7 +19,7 @@ function DouleursGeneralisees({ formData, updateField, onNext, onSkip }) {
         <p style={styles.subLabel}>Description</p>
         <input
           type="text"
-          placeholder="ex : douleurs primaires..."
+          placeholder="Ex : douleurs primaires..."
           value={formData.descriptionDouleursNociplastiques}
           onChange={(e) =>
             updateField("descriptionDouleursNociplastiques", e.target.value)
@@ -67,7 +44,7 @@ function DouleursGeneralisees({ formData, updateField, onNext, onSkip }) {
         />
       </div>
 
-      <button style={styles.btnPrimary} onClick={handleNext}>
+      <button style={styles.btnPrimary} onClick={onNext}>
         Section suivante
       </button>
     </div>
@@ -75,15 +52,6 @@ function DouleursGeneralisees({ formData, updateField, onNext, onSkip }) {
 }
 
 const styles = {
-  errorBanner: {
-    backgroundColor: "#fff0f0",
-    border: "1px solid red",
-    color: "red",
-    padding: "12px 16px",
-    borderRadius: "8px",
-    marginBottom: "16px",
-    fontSize: "14px",
-  },
   btnSkip: {
     width: "100%",
     padding: "10px",

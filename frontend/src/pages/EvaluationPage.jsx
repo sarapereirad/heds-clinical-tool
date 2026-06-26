@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { AiOutlineHome, AiOutlineArrowLeft } from "react-icons/ai";
+import { AiOutlineArrowLeft, AiOutlineHome } from "react-icons/ai";
 
 import { useFormState } from "../hooks/useFormState";
 import Sidebar from "../components/layout/Sidebar";
@@ -30,6 +30,13 @@ function EvaluationPage({ importedData }) {
     if (result === "redirect") navigate("/");
   };
 
+  const handleGoToSection = (index) => {
+    if (sectionStatus["infos"] === "pending" && index !== 0) {
+      return;
+    }
+    goToSection(index);
+  };
+
   const renderSection = () => {
     const props = {
       formData,
@@ -55,6 +62,7 @@ function EvaluationPage({ importedData }) {
             formData={formData}
             updateField={updateField}
             patientId={patientId}
+            sectionStatus={sectionStatus}
           />
         );
       default:
@@ -82,7 +90,7 @@ function EvaluationPage({ importedData }) {
         <Sidebar
           currentSectionIndex={currentSectionIndex}
           sectionStatus={sectionStatus}
-          onGoToSection={goToSection}
+          onGoToSection={handleGoToSection}
         />
         <div style={styles.content}>{renderSection()}</div>
       </div>
@@ -92,10 +100,11 @@ function EvaluationPage({ importedData }) {
 
 const styles = {
   page: {
-    minHeight: "100vh",
+    height: "100vh",
     backgroundColor: "#f5f5f5",
     display: "flex",
     flexDirection: "column",
+    overflow: "hidden",
   },
   header: {
     display: "flex",
@@ -104,6 +113,10 @@ const styles = {
     padding: "12px 32px",
     backgroundColor: "#fff",
     borderBottom: "1px solid #e0e0e0",
+    position: "sticky",
+    top: 0,
+    zIndex: 100,
+    flexShrink: 0,
   },
   headerIcon: {
     cursor: "pointer",
@@ -117,6 +130,7 @@ const styles = {
   body: {
     display: "flex",
     flex: 1,
+    overflow: "hidden",
   },
   content: {
     flex: 1,

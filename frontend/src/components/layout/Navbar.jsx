@@ -1,10 +1,7 @@
-import { AiOutlineHome, AiOutlineLogout, AiOutlineLock } from "react-icons/ai";
-import { useNavigate } from "react-router-dom";
+import { AiOutlineLogout, AiOutlineLock } from "react-icons/ai";
 import keycloak from "../../services/authService";
 
 function Navbar() {
-  const navigate = useNavigate();
-
   const handleLogout = () => {
     keycloak.logout({
       redirectUri: "http://localhost:5173/login",
@@ -15,15 +12,8 @@ function Navbar() {
     keycloak.accountManagement();
   };
 
-  const handleHome = () => {
-    navigate("/");
-  };
-
   return (
     <nav style={styles.navbar}>
-      <div style={styles.left}>
-        <AiOutlineHome size={22} style={styles.homeIcon} onClick={handleHome} />
-      </div>
       <div style={styles.right}>
         <span style={styles.doctorName}>
           {keycloak.tokenParsed?.given_name} {keycloak.tokenParsed?.family_name}
@@ -42,19 +32,11 @@ function Navbar() {
 const styles = {
   navbar: {
     display: "flex",
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
     alignItems: "center",
     padding: "12px 32px",
     backgroundColor: "#ffffff",
     borderBottom: "1px solid #e0e0e0",
-  },
-  left: {
-    cursor: "pointer",
-    color: "#1a1a2e",
-  },
-  homeIcon: {
-    color: "#1a1a2e",
-    cursor: "pointer",
   },
   right: {
     display: "flex",

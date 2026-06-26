@@ -1,4 +1,4 @@
-export async function generateReport(formData, patientId) {
+export async function generateReport(formData, patientId, sectionStatus) {
   const response = await fetch("http://localhost:8000/generate-report", {
     method: "POST",
     headers: {
@@ -7,6 +7,7 @@ export async function generateReport(formData, patientId) {
     body: JSON.stringify({
       patientId: patientId,
       formData: formData,
+      sectionStatus: sectionStatus,
     }),
   });
 
@@ -18,7 +19,8 @@ export async function generateReport(formData, patientId) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `evaluation_${patientId}_${new Date().toISOString().split("T")[0]}.zip`;
+  const date = new Date().toISOString().slice(0, 10).replace(/-/g, "_");
+  link.download = `${date}_${patientId}.zip`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
