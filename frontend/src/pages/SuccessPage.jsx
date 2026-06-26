@@ -7,24 +7,24 @@ function SuccessPage() {
   return (
     <div style={styles.page}>
       <div style={styles.container}>
-        {/* Icône succès */}
         <BsCheckCircleFill size={60} color="#2ecc71" />
 
         <h1 style={styles.title}>Le rapport a bien été généré</h1>
         <p style={styles.subtitle}>
-          Vos fichiers ont été téléchargés automatiquement
+          Votre dossier a été téléchargé automatiquement
         </p>
 
-        {/* Détail des fichiers */}
         <div style={styles.filesCard}>
-          <p style={styles.filesTitle}>Deux fichiers ont été générés :</p>
+          <p style={styles.filesTitle}>Le dossier téléchargé contient :</p>
           <p style={styles.fileItem}>
-            1. <strong>Rapport Word</strong> contenant le résumé de la
-            consultation, à transmettre aux professionnels de santé concernés.
+            1. <strong>Un ou plusieurs rapports Word</strong> — un rapport par
+            professionnel de santé sélectionné dans le réseau médical, à
+            transmettre aux destinataires concernés.
           </p>
           <p style={styles.fileItem}>
-            2. <strong>Fichier de données</strong> permettant de réimporter
-            cette évaluation lors d'une prochaine consultation de suivi.
+            2. <strong>Un fichier de données JSON</strong> — permet de
+            réimporter cette évaluation lors d'une prochaine consultation de
+            suivi.
           </p>
         </div>
 
