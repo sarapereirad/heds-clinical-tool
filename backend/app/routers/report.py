@@ -9,14 +9,7 @@ from datetime import datetime
 
 router = APIRouter()
 
-MOIS = {
-    1: 'janvier', 2: 'février', 3: 'mars', 4: 'avril',
-    5: 'mai', 6: 'juin', 7: 'juillet', 8: 'août',
-    9: 'septembre', 10: 'octobre', 11: 'novembre', 12: 'décembre'
-}
-
 def format_date_fichier(date_str: str) -> str:
-    """Formate la date pour le nom de fichier : AAAA_MM_JJ"""
     try:
         date = datetime.strptime(date_str, '%Y-%m-%d')
         return date.strftime('%Y_%m_%d')

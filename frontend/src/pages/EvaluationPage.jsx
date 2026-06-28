@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { AiOutlineArrowLeft, AiOutlineHome } from "react-icons/ai";
+import { AiOutlineHome } from "react-icons/ai";
 
 import { useFormState } from "../hooks/useFormState";
 import Sidebar from "../components/layout/Sidebar";
@@ -73,11 +73,6 @@ function EvaluationPage({ importedData }) {
   return (
     <div style={styles.page}>
       <div style={styles.header}>
-        <AiOutlineArrowLeft
-          size={22}
-          style={styles.headerIcon}
-          onClick={() => navigate("/")}
-        />
         <span style={styles.patientId}>ID : {patientId}</span>
         <AiOutlineHome
           size={22}

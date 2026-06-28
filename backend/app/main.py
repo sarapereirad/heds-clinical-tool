@@ -1,6 +1,3 @@
-# main.py
-# Point d'entrée de l'application FastAPI
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import report

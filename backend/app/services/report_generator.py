@@ -1,7 +1,9 @@
 from docx import Document
-from docx.shared import Pt, RGBColor, Cm, Inches
+from docx.shared import Pt, RGBColor, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from datetime import datetime
+from docx.oxml.ns import qn
+from docx.oxml import OxmlElement
 import io
 
 
@@ -91,7 +93,6 @@ def section_recommandations_evaluee(form_data) -> bool:
         form_data.recommandationsTexteLibre.strip()
     )
 
-
 def add_title(doc, text, level=1):
     para = doc.add_paragraph()
     run = para.add_run(text)
@@ -133,8 +134,6 @@ def add_separator(doc):
     para = doc.add_paragraph()
     para.paragraph_format.space_after = Pt(6)
     pPr = para._p.get_or_add_pPr()
-    from docx.oxml.ns import qn
-    from docx.oxml import OxmlElement
     pBdr = OxmlElement('w:pBdr')
     bottom = OxmlElement('w:bottom')
     bottom.set(qn('w:val'), 'single')
@@ -157,9 +156,6 @@ def generate_report(patient_id: str, form_data, destinataire: str = '[Destinatai
         section.bottom_margin = Cm(2.5)
         section.left_margin = Cm(2.5)
         section.right_margin = Cm(2.5)
-
-    from docx.oxml.ns import qn
-    from docx.oxml import OxmlElement
 
     date_str = format_date_rapport(form_data.dateConsultation or '')
 

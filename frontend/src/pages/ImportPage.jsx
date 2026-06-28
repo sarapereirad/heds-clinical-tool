@@ -1,14 +1,6 @@
-// ImportPage.jsx
-// Page permettant d'importer une évaluation existante via un fichier JSON
-// Drag & drop ou clic pour sélectionner le fichier
-
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  AiOutlineArrowLeft,
-  AiOutlineHome,
-  AiOutlineUpload,
-} from "react-icons/ai";
+import { AiOutlineHome, AiOutlineUpload } from "react-icons/ai";
 import { importFromJson } from "../utils/importJson";
 
 function ImportPage({ onImport }) {
@@ -58,13 +50,7 @@ function ImportPage({ onImport }) {
 
   return (
     <div style={styles.page}>
-      {/* Header */}
       <div style={styles.header}>
-        <AiOutlineArrowLeft
-          size={22}
-          style={styles.icon}
-          onClick={() => navigate("/")}
-        />
         <AiOutlineHome
           size={22}
           style={styles.icon}
@@ -78,7 +64,6 @@ function ImportPage({ onImport }) {
           Format accepté : <code>.json</code>
         </p>
 
-        {/* Zone drag & drop */}
         <div
           style={dragging ? styles.dropZoneActive : styles.dropZone}
           onDrop={handleDrop}
@@ -93,7 +78,6 @@ function ImportPage({ onImport }) {
           <p style={styles.dropSubtext}>Fichier JSON uniquement</p>
         </div>
 
-        {/* Input caché */}
         <input
           ref={fileInputRef}
           type="file"
@@ -102,7 +86,6 @@ function ImportPage({ onImport }) {
           onChange={handleFileInput}
         />
 
-        {/* Message d'erreur */}
         {error && <p style={styles.errorMsg}>{error}</p>}
       </div>
     </div>

@@ -45,7 +45,7 @@ function ReseauMedical({ formData, updateField, patientId, sectionStatus }) {
 
   return (
     <div>
-      <h2 style={styles.title}>4. Réseau médical</h2>
+      <h2 style={styles.title}>5. Réseau médical</h2>
       <p style={styles.instruction}>
         Cochez les spécialistes impliqués dans le suivi
       </p>
@@ -137,18 +137,6 @@ function ReseauMedical({ formData, updateField, patientId, sectionStatus }) {
 }
 
 const styles = {
-  btnSkip: {
-    width: "100%",
-    padding: "10px",
-    backgroundColor: "#f0f0f0",
-    color: "#888",
-    border: "1px solid #ddd",
-    borderRadius: "8px",
-    fontSize: "14px",
-    cursor: "pointer",
-    marginBottom: "24px",
-    textAlign: "center",
-  },
   title: {
     fontSize: "20px",
     fontWeight: "700",
@@ -248,27 +236,6 @@ const styles = {
     fontWeight: "600",
     cursor: "not-allowed",
     marginTop: "8px",
-  },
-  phoneRow: {
-    display: "flex",
-    gap: "8px",
-    alignItems: "center",
-  },
-  selectIndicatif: {
-    padding: "8px",
-    border: "1px solid #ccc",
-    borderRadius: "8px",
-    fontSize: "14px",
-    backgroundColor: "white",
-    cursor: "pointer",
-  },
-  phoneInput: {
-    flex: 1,
-    padding: "8px 12px",
-    border: "1px solid #ccc",
-    borderRadius: "8px",
-    fontSize: "14px",
-    boxSizing: "border-box",
   },
 };
 

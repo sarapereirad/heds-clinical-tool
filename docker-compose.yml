@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   postgres:
     image: postgres:15
@@ -45,8 +43,6 @@ services:
     container_name: heds-backend
     ports:
       - "8000:8000"
-    environment:
-      - KEYCLOAK_URL=http://keycloak:8080
     networks:
       - heds-network
     depends_on:

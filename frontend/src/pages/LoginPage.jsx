@@ -71,15 +71,6 @@ const styles = {
     color: "#aaa",
     textAlign: "center",
   },
-  btnForgot: {
-    background: "none",
-    border: "none",
-    color: "#1a1a2e",
-    fontWeight: "600",
-    fontSize: "14px",
-    cursor: "pointer",
-    textDecoration: "underline",
-  },
 };
 
 export default LoginPage;

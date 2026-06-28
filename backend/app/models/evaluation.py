@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, Dict
 
 class SpecialisteData(BaseModel):
@@ -33,7 +33,7 @@ class FormData(BaseModel):
     instabiliteArticulaire: Optional[str] = ""
 
     instabiliteATM: Optional[str] = ""
-    instabiliteATMSymptomes: Optional[InstabiliteATMSymptomes] = InstabiliteATMSymptomes()
+    instabiliteATMSymptomes: Optional[InstabiliteATMSymptomes] = Field(default_factory=InstabiliteATMSymptomes)
     instabiliteATMPriseEnCharge: Optional[str] = ""
     instabiliteATMPhysio: Optional[str] = ""
     instabiliteATMChirurgie: Optional[str] = ""
@@ -66,10 +66,10 @@ class FormData(BaseModel):
     priseEnChargeNeuropathique: Optional[str] = ""
     notesNeuropathiques: Optional[str] = ""
 
-    recommandations: Optional[Recommandations] = Recommandations()
+    recommandations: Optional[Recommandations] = Field(default_factory=Recommandations)
     recommandationsTexteLibre: Optional[str] = ""
 
-    specialistes: Optional[Dict[str, SpecialisteData]] = {}
+    specialistes: Optional[Dict[str, SpecialisteData]] = Field(default_factory=dict)
     notesReseau: Optional[str] = ""
 
 class EvaluationRequest(BaseModel):
