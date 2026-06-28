@@ -4,7 +4,7 @@ import keycloak from "../../services/authService";
 function Navbar() {
   const handleLogout = () => {
     keycloak.logout({
-      redirectUri: "http://localhost:5173/login",
+      redirectUri: `${import.meta.env.VITE_FRONTEND_URL || "http://localhost:5173"}/login`,
     });
   };
 

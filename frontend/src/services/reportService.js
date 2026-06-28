@@ -1,5 +1,7 @@
 export async function generateReport(formData, patientId, sectionStatus) {
-  const response = await fetch("http://localhost:8000/generate-report", {
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+  const response = await fetch(`${apiUrl}/generate-report`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

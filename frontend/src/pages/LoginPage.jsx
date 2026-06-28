@@ -3,7 +3,7 @@ import keycloak from "../services/authService";
 function LoginPage() {
   const handleLogin = () => {
     keycloak.login({
-      redirectUri: "http://localhost:5173/",
+      redirectUri: `${import.meta.env.VITE_FRONTEND_URL || "http://localhost:5173"}/`,
     });
   };
 
