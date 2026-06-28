@@ -13,6 +13,10 @@ function App({ authenticated }) {
     setImportedData(data);
   };
 
+  const handleNewEvaluation = () => {
+    setImportedData(null);
+  };
+
   return (
     <BrowserRouter>
       <Routes>
@@ -22,7 +26,13 @@ function App({ authenticated }) {
         />
         <Route
           path="/"
-          element={authenticated ? <HomePage /> : <Navigate to="/login" />}
+          element={
+            authenticated ? (
+              <HomePage onNewEvaluation={handleNewEvaluation} />
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
         />
         <Route
           path="/evaluation"

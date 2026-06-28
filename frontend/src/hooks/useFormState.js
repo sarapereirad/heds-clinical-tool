@@ -12,7 +12,7 @@ function getTodayDate() {
 }
 
 export function useFormState(importedData = null) {
-  const [patientId] = useState(generatePatientId);
+  const [patientId] = useState(importedData?.patientId || generatePatientId);
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [sectionStatus, setSectionStatus] = useState(
     importedData?.sectionStatus &&

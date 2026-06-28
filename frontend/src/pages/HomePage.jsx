@@ -1,7 +1,7 @@
 import Navbar from "../components/layout/Navbar";
 import { useNavigate } from "react-router-dom";
 
-function HomePage() {
+function HomePage({ onNewEvaluation }) {
   const navigate = useNavigate();
 
   return (
@@ -13,7 +13,10 @@ function HomePage() {
         <div style={styles.buttonGroup}>
           <button
             style={styles.btnPrimary}
-            onClick={() => navigate("/evaluation")}
+            onClick={() => {
+              onNewEvaluation();
+              navigate("/evaluation");
+            }}
           >
             Nouvelle évaluation
           </button>
