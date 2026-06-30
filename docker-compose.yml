@@ -10,12 +10,12 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - heds-network
+      - backend
 
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.1
     container_name: heds-keycloak
-    command: start-dev
+    command: start
     environment:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres:${POSTGRES_PORT}/keycloak
@@ -33,19 +33,12 @@ services:
     depends_on:
       - postgres
     networks:
-      - heds-network
+      - backend
       - prod
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.heds-keycloak.rule=Host(`auth.heds.ehealth.hevs.ch`)"
       - "traefik.docker.network=prod"
-      - "traefik.http.services.heds-keycloak.loadbalancer.server.port=8080"
-
-  mailhog:
-    image: mailhog/mailhog
-    container_name: heds-mailhog
-    networks:
-      - heds-network
 
   backend:
     build: ./backend
@@ -53,7 +46,7 @@ services:
     environment:
       - FRONTEND_URL=${FRONTEND_URL}
     networks:
-      - heds-network
+      - backend
       - prod
     depends_on:
       - keycloak
@@ -61,13 +54,12 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.heds-backend.rule=Host(`api.heds.ehealth.hevs.ch`)"
       - "traefik.docker.network=prod"
-      - "traefik.http.services.heds-backend.loadbalancer.server.port=8000"
 
   frontend:
     build: ./frontend
     container_name: heds-frontend
     networks:
-      - heds-network
+      - backend
       - prod
     depends_on:
       - backend
@@ -75,11 +67,10 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.heds-frontend.rule=Host(`heds.ehealth.hevs.ch`)"
       - "traefik.docker.network=prod"
-      - "traefik.http.services.heds-frontend.loadbalancer.server.port=80"
 
 networks:
-  heds-network:
-    driver: bridge
+  backend:
+    external: false
   prod:
     external: true
 
